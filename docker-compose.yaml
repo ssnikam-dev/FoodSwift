@@ -1,0 +1,86 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  mongo:
+    image: mongo:7
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+
+  eureka:
+    build: ../eureka-service
+    restart: always
+    ports: ["127.0.0.1:8761:8761"]
+    environment:
+      JAVA_OPS: "-Xmx200m -XX:+UseSerialGC"
+
+  restaurant-service:
+    build: ../restaurant-listing-service
+    restart: always
+    depends_on: [mysql, eureka]
+    ports: ["127.0.0.1:9091:9091"]
+    environment:
+      JAVA_OPS: "-Xmx300m -XX:+UseSerialGC"
+      RESTAURANT_DB_URL: "jdbc:mysql://mysql:3306/restaurantdb?sslMode=DISABLED&allowPublicKeyRetrieval=true"
+      RESTAURANT_DB_USERNAME: restaurant_user
+      RESTAURANT_DB_PASSWORD: ${RESTAURANT_DB_PASSWORD}
+      EUREKA_URL: http://eureka:8761/eureka
+
+  foodcatalogue-service:
+    build: ../foodcatalogue-service
+    restart: always
+    depends_on: [mysql, eureka]
+    ports: ["127.0.0.1:9092:9092"]
+    environment:
+      JAVA_OPS: "-Xmx300m -XX:+UseSerialGC"
+      FOOD_DB_URL: "jdbc:mysql://mysql:3306/foodcataloguedb?sslMode=DISABLED&allowPublicKeyRetrieval=true"
+      FOOD_DB_USERNAME: food_user
+      FOOD_DB_PASSWORD: ${FOOD_DB_PASSWORD}
+      EUREKA_URL: http://eureka:8761/eureka
+
+  user-service:
+    build: ../user-service
+    restart: always
+    depends_on: [mysql, eureka]
+    ports: ["127.0.0.1:9093:9093"]
+    environment:
+      JAVA_OPS: "-Xmx300m -XX:+UseSerialGC"
+      USER_DB_URL: "jdbc:mysql://mysql:3306/userdb?sslMode=DISABLED&allowPublicKeyRetrieval=true"
+      USER_DB_USERNAME: user_svc
+      USER_DB_PASSWORD: ${USER_DB_PASSWORD}
+      EUREKA_URL: http://eureka:8761/eureka
+
+  order-service:
+    build: ../order-service
+    restart: always
+    depends_on: [mongo, eureka]
+    ports: ["127.0.0.1:9094:9094"]
+    environment:
+      JAVA_OPS: "-Xmx300m -XX:+UseSerialGC"
+      ORDER_DB_URL: "mongodb://order_user:${ORDER_DB_PASSWORD}@mongo:27017/orderdb?authSource=orderdb"
+      EUREKA_URL: http://eureka:8761/eureka
+
+  caddy:
+    image: caddy:2
+    restart: always
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  mysql_data:
+  mongo_data:
+  caddy_data:
+  caddy_config:
