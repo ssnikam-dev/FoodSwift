@@ -1,0 +1,121 @@
+# FoodSwift on a single VPS: databases, Eureka, four services and Caddy (HTTPS).
+# Only Caddy is public. Everything else listens on the private Docker network
+# (service ports are bound to 127.0.0.1 for admin access through an SSH tunnel).
+name: foodswift
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    command: ["--performance-schema=OFF"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set in .env}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?set in .env}
+    volumes:
+      - mongo_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping').ok\" | grep -q 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  eureka:
+    build: ./eureka-service
+    restart: unless-stopped
+    mem_limit: 512m
+    ports: ["127.0.0.1:8761:8761"]
+    environment:
+      JAVA_OPS: "-Xmx200m -XX:+UseSerialGC"
+
+  restaurant-service:
+    build: ./restaurant-listing-service
+    restart: unless-stopped
+    mem_limit: 512m
+    depends_on:
+      mysql: { condition: service_healthy }
+      eureka: { condition: service_started }
+    ports: ["127.0.0.1:9091:9091"]
+    environment:
+      JAVA_OPS: "-Xmx256m -XX:+UseSerialGC"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/restaurantdb?sslMode=DISABLED&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: restaurant_user
+      SPRING_DATASOURCE_PASSWORD: ${RESTAURANT_DB_PASSWORD:?set in .env}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+
+  foodcatalogue-service:
+    build: ./foodcatalogue-service
+    restart: unless-stopped
+    mem_limit: 512m
+    depends_on:
+      mysql: { condition: service_healthy }
+      eureka: { condition: service_started }
+    ports: ["127.0.0.1:9092:9092"]
+    environment:
+      JAVA_OPS: "-Xmx256m -XX:+UseSerialGC"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/foodcataloguedb?sslMode=DISABLED&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: food_user
+      SPRING_DATASOURCE_PASSWORD: ${FOOD_DB_PASSWORD:?set in .env}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+
+  user-service:
+    build: ./user-service
+    restart: unless-stopped
+    mem_limit: 512m
+    depends_on:
+      mysql: { condition: service_healthy }
+      eureka: { condition: service_started }
+    ports: ["127.0.0.1:9093:9093"]
+    environment:
+      JAVA_OPS: "-Xmx256m -XX:+UseSerialGC"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/userdb?sslMode=DISABLED&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: user_svc
+      SPRING_DATASOURCE_PASSWORD: ${USER_DB_PASSWORD:?set in .env}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+
+  order-service:
+    build: ./order-service
+    restart: unless-stopped
+    mem_limit: 512m
+    depends_on:
+      mongo: { condition: service_healthy }
+      eureka: { condition: service_started }
+    ports: ["127.0.0.1:9094:9094"]
+    environment:
+      JAVA_OPS: "-Xmx256m -XX:+UseSerialGC"
+      SPRING_DATA_MONGODB_URI: "mongodb://order_user:${ORDER_DB_PASSWORD:?set in .env}@mongo:27017/orderdb?authSource=orderdb"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?set in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  mysql_data:
+  mongo_data:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,12 @@
+CREATE DATABASE IF NOT EXISTS restaurantdb    CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS foodcataloguedb CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS userdb          CHARACTER SET utf8mb4;
+
+CREATE USER 'restaurant_user'@'%' IDENTIFIED BY 'CHANGE_ME_RESTAURANT';
+CREATE USER 'food_user'@'%'       IDENTIFIED BY 'CHANGE_ME_FOOD';
+CREATE USER 'user_svc'@'%'        IDENTIFIED BY 'CHANGE_ME_USER';
+
+GRANT ALL PRIVILEGES ON restaurantdb.*    TO 'restaurant_user'@'%';
+GRANT ALL PRIVILEGES ON foodcataloguedb.* TO 'food_user'@'%';
+GRANT ALL PRIVILEGES ON userdb.*          TO 'user_svc'@'%';
+FLUSH PRIVILEGES;

@@ -1,0 +1,8 @@
+# Replace eureka-service/src/main/resources/application.yml with this.
+server:
+  port: ${PORT:8761}
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false

@@ -1,0 +1,6 @@
+db = db.getSiblingDB('orderdb');
+db.createUser({
+  user: 'order_user',
+  pwd: 'CHANGE_ME_ORDER',
+  roles: [{ role: 'readWrite', db: 'orderdb' }]
+});

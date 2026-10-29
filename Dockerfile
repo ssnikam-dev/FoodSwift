@@ -1,0 +1,11 @@
+# Same file for all five Spring Boot projects (eureka, restaurant, foodcatalogue, user, order).
+FROM maven:3.9-eclipse-temurin-11 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn -q -B -DskipTests package
+
+FROM eclipse-temurin:11-jre
+WORKDIR /opt
+COPY --from=build /app/target/*.jar app.jar
+ENTRYPOINT exec java $JAVA_OPS -jar app.jar
