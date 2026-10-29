@@ -1,0 +1,40 @@
+# Traefik (bundled with k3s). Only the endpoints the Angular app uses are public.
+# Replace api.yourdomain.com with your real hostname.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api
+  namespace: food-delivery
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - api.yourdomain.com
+      secretName: api-tls
+  rules:
+    - host: api.yourdomain.com
+      http:
+        paths:
+          - path: /restaurant/fetchAllRestaurants
+            pathType: Prefix
+            backend:
+              service:
+                name: restaurant-service
+                port:
+                  number: 9091
+          - path: /foodCatalogue/fetchRestaurantAndFoodItemsById
+            pathType: Prefix
+            backend:
+              service:
+                name: foodcatalogue-service
+                port:
+                  number: 9092
+          - path: /order/saveOrder
+            pathType: Prefix
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 9094
