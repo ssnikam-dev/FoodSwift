@@ -1,53 +1,47 @@
-import { Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { OrderService } from '../service/order.service';
 import { OrderDTO } from '../models/OrderDTO';
+import { CartService } from 'src/app/cart/services/cart.service';
+import { AuthService } from 'src/app/auth/services/auth.service';
 
 @Component({
   selector: 'app-order-summary',
   templateUrl: './order-summary.component.html',
   styleUrls: ['./order-summary.component.css']
 })
-export class OrderSummaryComponent {
+export class OrderSummaryComponent implements OnInit {
 
-  orderSummary?: OrderDTO;
-  obj: any;
-  total?: any;
-  showDialog: boolean = false;
+  obj: OrderDTO = { foodItemsList: [] };
+  total = 0;
+  showDialog = false;
+  placing = false;
+  error = '';
 
-  constructor(private route: ActivatedRoute, private orderService: OrderService, private router: Router) { }
-  
-  ngOnInit() {
-    const data = this.route.snapshot.queryParams['data'];
-    this.obj = JSON.parse(data);
-    this.obj.userId=1;
-    this.orderSummary = this.obj;
+  constructor(private router: Router, private orderService: OrderService,
+              private cart: CartService, private auth: AuthService) { }
 
-    this.total = this.orderSummary.foodItemsList.reduce((accumulator, currentValue) => {
-      return accumulator + (currentValue.quantity * currentValue.price);
-    }, 0);
-
+  ngOnInit(): void {
+    const c = this.cart.snapshot;
+    if (!c.items.length) { this.router.navigate(['/cart']); return; }
+    this.obj = { foodItemsList: c.items, restaurant: c.restaurant, userId: this.auth.user?.id };
+    this.total = this.cart.totalOf(c);
   }
 
-  saveOrder() {
-    this.orderService.saveOrder(this.orderSummary)
-      .subscribe(
-        response => {
-            this.showDialog = true;
-        },
-        error => {
-          console.error('Failed to save data:', error);
-        }
-      );
+  get auth_name(): string { return this.auth.user?.name || ''; }
+
+  saveOrder(): void {
+    this.placing = true;
+    this.error = '';
+    // userId comes from the logged-in account (the backend should also read it from the JWT)
+    this.orderService.saveOrder({ ...this.obj, userId: this.auth.user?.id }).subscribe({
+      next: () => { this.placing = false; this.cart.clear(); this.showDialog = true; },
+      error: () => { this.placing = false; this.error = 'We could not place your order. Please try again.'; }
+    });
   }
 
-  closeDialog() {
+  closeDialog(): void {
     this.showDialog = false;
-    this.router.navigate(['/']); // Replace '/home' with the actual route for your home page
+    this.router.navigate(['/']);
   }
-
-
-
-
-
 }

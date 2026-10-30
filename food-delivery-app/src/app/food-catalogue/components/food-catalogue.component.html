@@ -1,33 +1,56 @@
-<div class="restaurant-details" *ngIf="foodItemResponse?.restaurant as restaurant">
-    <div class="restaurant-header">
+<div class="container page">
+  <div class="alert alert-error" role="alert" *ngIf="error">{{ error }}</div>
+  <div class="skeleton" *ngIf="loading"></div>
+
+  <ng-container *ngIf="foodItemResponse?.restaurant as restaurant">
+    <a class="back-link" routerLink="/restaurant-listing">‹ All restaurants</a>
+    <div class="menu-head">
+      <div>
         <h1>{{ restaurant.name }}</h1>
-        <button class="checkout-button" (click)="onCheckOut()">
-            <i class="fas fa-shopping-cart"></i>
-            Checkout
-        </button>
+        <p class="muted">{{ restaurant.restaurantDescription }}</p>
+      </div>
     </div>
 
-    <p>{{ restaurant.restaurantDescription }}</p>
+    <div class="menu-tools">
+      <input class="input" type="search" [(ngModel)]="search" placeholder="Search this menu" aria-label="Search this menu">
+      <button class="chip" type="button" [attr.aria-pressed]="vegOnly" (click)="vegOnly = !vegOnly">Veg only</button>
+    </div>
 
-    <h2>Food Menu</h2>
     <div class="food-list">
-        <div class="food-item" *ngFor="let food of foodItemResponse.foodItemsList">
-            <div class="food-details">
-                <div class="food-name">{{ food.itemName }}</div>
-                <div class="food-price">₹ {{ food.price }}</div>
-            </div>
-            <div class="food-quantity">
-                <button class="minus-button"
-                        *ngIf="food.quantity > 0"
-                        (click)="decrement(food)">-</button>
-                <div class="quantity-label">{{ food.quantity }}</div>
-                <button class="plus-button" (click)="increment(food)">+</button>
-            </div>
+      <div class="food-item" *ngFor="let food of visibleItems; trackBy: trackById">
+        <div class="food-details">
+          <div class="food-name">
+            <span class="diet" [class.nonveg]="!isVeg(food)" [attr.title]="isVeg(food) ? 'Vegetarian' : 'Non-vegetarian'"></span>
+            {{ food.itemName }}
+          </div>
+          <div class="food-desc" *ngIf="food.itemDescription">{{ food.itemDescription }}</div>
+          <div class="food-price">₹ {{ food.price }}</div>
         </div>
+
+        <button class="btn btn-ghost add-btn" type="button" *ngIf="qty(food) === 0; else stepper" (click)="increment(food)">Add</button>
+        <ng-template #stepper>
+          <div class="stepper">
+            <button type="button" (click)="decrement(food)" [attr.aria-label]="'Remove one ' + food.itemName">−</button>
+            <span class="qty">{{ qty(food) }}</span>
+            <button type="button" (click)="increment(food)" [attr.aria-label]="'Add one ' + food.itemName">+</button>
+          </div>
+        </ng-template>
+      </div>
     </div>
+
+    <div class="empty" *ngIf="!visibleItems.length">
+      <h3>Nothing matches</h3>
+      <p class="muted">Clear the search or turn off “Veg only”.</p>
+    </div>
+  </ng-container>
 </div>
 
-<!-- Optional: Loading or fallback state -->
-<div *ngIf="!foodItemResponse?.restaurant" class="loading">
-    <p>Loading restaurant details...</p>
+<div class="cart-bar" *ngIf="(count$ | async) as n">
+  <div class="container cart-bar-inner">
+    <strong>{{ n }} {{ n === 1 ? 'item' : 'items' }} · ₹ {{ total$ | async }}</strong>
+    <span>
+      <a class="btn" routerLink="/cart" style="margin-right:8px">View cart</a>
+      <button class="btn" type="button" (click)="onCheckOut()">Checkout</button>
+    </span>
+  </div>
 </div>

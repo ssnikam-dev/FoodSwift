@@ -1,20 +1,43 @@
+<main class="container page">
+  <section class="hero-search">
+    <h1>What are you craving today?</h1>
+    <div class="big-search">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input class="input" type="search" [ngModel]="query" (ngModelChange)="onSearch($event)"
+             placeholder="Search by name, city or description" aria-label="Search restaurants">
+      <button class="clear-btn" type="button" *ngIf="query" (click)="clear()" aria-label="Clear search">×</button>
+    </div>
+  </section>
 
-<main class="main-content my-gap" >
-    <div class="restaurant-grid">
-        <div class="restaurant-card" *ngFor="let restaurant of restaurantList">
-          <div class="restaurant-image">
-            <img [src]="'assets/restaurant-pics/' + getRandomImage()" alt="Restaurant 1">
-          </div>
-          <div class="restaurant-details">
-            <h3 class="restaurant-name">{{restaurant.name}}</h3>
-            <div class="restaurant-rating">
-              <span class="rating"><i class="fa fa-star"></i>4.5</span>
-              <span class="rating-count">(500+)</span>
-            </div>
-            <button class="order-btn" (click)="onButtonClick(restaurant.id)">Order Now</button>
-          </div>
+  <div class="restaurant-grid" *ngIf="loading">
+    <div class="skeleton" *ngFor="let s of [1,2,3,4,5,6,7,8]"></div>
+  </div>
+
+  <div class="alert alert-error" role="alert" *ngIf="error">{{ error }}</div>
+
+  <ng-container *ngIf="!loading && !error">
+    <p class="result-meta" *ngIf="query">
+      {{ filtered.length }} {{ filtered.length === 1 ? 'result' : 'results' }} for “{{ query }}”
+    </p>
+
+    <div class="restaurant-grid" *ngIf="filtered.length">
+      <article class="restaurant-card" *ngFor="let restaurant of filtered; trackBy: trackById">
+        <div class="restaurant-image">
+          <img [src]="imageFor(restaurant)" [alt]="restaurant.name" loading="lazy">
         </div>
-      </div>
-    </main>
-    
-    
+        <div class="restaurant-details">
+          <h3 class="restaurant-name">{{ restaurant.name }}</h3>
+          <p class="restaurant-sub">{{ restaurant.city }}<ng-container *ngIf="restaurant.restaurantDescription"> · {{ restaurant.restaurantDescription }}</ng-container></p>
+          <div class="restaurant-rating"><span class="star">★</span> 4.5 <span class="muted">(500+)</span></div>
+          <button class="btn btn-primary" type="button" (click)="openMenu(restaurant.id)">View menu</button>
+        </div>
+      </article>
+    </div>
+
+    <div class="empty" *ngIf="!filtered.length">
+      <h3>No restaurants match “{{ query }}”</h3>
+      <p class="muted" style="margin-bottom:16px">Try a different name or city.</p>
+      <button class="btn btn-ghost" type="button" (click)="clear()">Show all restaurants</button>
+    </div>
+  </ng-container>
+</main>

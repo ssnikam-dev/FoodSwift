@@ -1,0 +1,51 @@
+<div class="container auth-wrap">
+  <div class="auth-card">
+    <h1>{{ mode === 'login' ? 'Log in to continue' : 'Create your account' }}</h1>
+
+    <p class="alert alert-info" *ngIf="fromCheckout">
+      Your cart is saved. {{ mode === 'login' ? 'Log in' : 'Sign up' }} to place your order.
+    </p>
+
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" [attr.aria-selected]="mode === 'login'" (click)="setMode('login')">Log in</button>
+      <button type="button" role="tab" [attr.aria-selected]="mode === 'register'" (click)="setMode('register')">Sign up</button>
+    </div>
+
+    <div class="alert alert-error" role="alert" *ngIf="error">{{ error }}</div>
+
+    <form #f="ngForm" (ngSubmit)="submit(f)" novalidate>
+      <div class="field" *ngIf="mode === 'register'">
+        <label for="name">Full name</label>
+        <input id="name" name="name" class="input" [class.invalid]="n.invalid && n.touched"
+               [(ngModel)]="name" #n="ngModel" required minlength="2" autocomplete="name">
+        <span class="field-error" *ngIf="n.invalid && n.touched">Enter your name.</span>
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" class="input" [class.invalid]="e.invalid && e.touched"
+               [(ngModel)]="email" #e="ngModel" required email autocomplete="email">
+        <span class="field-error" *ngIf="e.invalid && e.touched">Enter a valid email address.</span>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" class="input" [class.invalid]="p.invalid && p.touched"
+               [(ngModel)]="password" #p="ngModel" required [minlength]="mode === 'register' ? 8 : 1"
+               [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'">
+        <span class="field-error" *ngIf="p.invalid && p.touched">
+          {{ mode === 'register' ? 'Use at least 8 characters.' : 'Enter your password.' }}
+        </span>
+      </div>
+
+      <button class="btn btn-primary btn-block btn-lg" type="submit" [disabled]="loading">
+        {{ loading ? 'Please wait…' : (mode === 'login' ? 'Log in' : 'Create account') }}
+      </button>
+    </form>
+
+    <p class="switch">
+      <ng-container *ngIf="mode === 'login'">New here? <button class="link-btn" type="button" (click)="setMode('register')">Create an account</button></ng-container>
+      <ng-container *ngIf="mode === 'register'">Already registered? <button class="link-btn" type="button" (click)="setMode('login')">Log in</button></ng-container>
+    </p>
+  </div>
+</div>

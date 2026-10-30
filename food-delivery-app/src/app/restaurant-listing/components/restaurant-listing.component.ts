@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { RestaurantService } from '../service/restaurant.service';
-import { Router } from '@angular/router';
 import { Restaurant } from '../models/Restaurant';
 
 @Component({
@@ -8,36 +9,51 @@ import { Restaurant } from '../models/Restaurant';
   templateUrl: './restaurant-listing.component.html',
   styleUrls: ['./restaurant-listing.component.css']
 })
-export class RestaurantListingComponent {
+export class RestaurantListingComponent implements OnInit, OnDestroy {
 
-   public restaurantList: Restaurant[];
+  restaurantList: Restaurant[] = [];
+  filtered: Restaurant[] = [];
+  query = '';
+  loading = true;
+  error = '';
+  private sub?: Subscription;
 
-  ngOnInit() {
-    this.getAllRestaurants();
+  constructor(private router: Router, private route: ActivatedRoute, private restaurantService: RestaurantService) { }
+
+  ngOnInit(): void {
+    this.restaurantService.getAllRestaurants().subscribe({
+      next: data => { this.restaurantList = data || []; this.loading = false; this.applyFilter(); },
+      error: () => { this.loading = false; this.error = 'Could not load restaurants. Check that the services are running and try again.'; }
+    });
+
+    // the header search box and this page's box both drive ?q=
+    this.sub = this.route.queryParamMap.subscribe(p => {
+      this.query = p.get('q') || '';
+      this.applyFilter();
+    });
   }
 
-  constructor(private router: Router, private restaurantService: RestaurantService) { }
+  ngOnDestroy(): void { this.sub?.unsubscribe(); }
 
-  getAllRestaurants() {
-    this.restaurantService.getAllRestaurants().subscribe(
-      data => {
-        this.restaurantList = data;
-      }
-    )
-  }
-  getRandomNumber(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+  onSearch(value: string): void {
+    this.router.navigate([], { relativeTo: this.route, queryParams: { q: value.trim() || null }, replaceUrl: true });
   }
 
+  clear(): void { this.onSearch(''); }
 
-  getRandomImage(): string {
-    const imageCount = 8; // Adjust this number based on the number of images in your asset folder
-    const randomIndex = this.getRandomNumber(1, imageCount);
-    return `${randomIndex}.jpg`; // Replace with your image filename pattern
+  private applyFilter(): void {
+    const terms = this.query.toLowerCase().split(/\s+/).filter(Boolean);
+    this.filtered = !terms.length ? this.restaurantList : this.restaurantList.filter(r => {
+      const hay = `${r.name} ${r.city} ${r.address} ${r.restaurantDescription}`.toLowerCase();
+      return terms.every(t => hay.includes(t));
+    });
   }
 
-  onButtonClick(id: number) {
-    this.router.navigate(['/food-catalogue', id]);
+  /** Stable image per restaurant (was random on every change detection). */
+  imageFor(r: Restaurant): string {
+    return `assets/restaurant-pics/${((r.id - 1) % 8 + 8) % 8 + 1}.jpg`;
   }
 
+  openMenu(id: number): void { this.router.navigate(['/food-catalogue', id]); }
+  trackById(_: number, r: Restaurant) { return r.id; }
 }

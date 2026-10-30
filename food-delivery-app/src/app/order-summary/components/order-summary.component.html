@@ -1,36 +1,38 @@
-<div class="order-summary">
-    <h1>Order Summary</h1>
-    <table>
+<div class="container page">
+  <div class="panel">
+    <h1>Order summary</h1>
+    <p class="muted" *ngIf="obj.restaurant">{{ obj.restaurant.name }} · for {{ auth_name }}</p>
+
+    <table class="order-table">
       <thead>
-        <tr>
-          <th>Item</th>
-          <th>Quantity</th>
-          <th>Price</th>
-        </tr>
+        <tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th></tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of obj.foodItemsList">
           <td>{{ item.itemName }}</td>
-          <td>{{ item.quantity }}</td>
-          <td>&#x20b9; {{ item.price }}</td>
+          <td class="num">{{ item.quantity }}</td>
+          <td class="num">₹ {{ item.quantity * item.price }}</td>
         </tr>
       </tbody>
-      <tfoot>
-        <tr>
-          <td colspan="2">Total</td>
-          <td>&#x20b9; {{ total }}</td>
-        </tr>
-      </tfoot>
     </table>
-    <button class="checkout-button" (click)="saveOrder()">Place Order</button>
-  </div>
-  
-  
-  <div class="dialog-container" *ngIf="showDialog">
-    <div class="dialog-box">
-      <h2>Order Placed!</h2>
-      <p>Your order has been successfully placed.</p>
-      <button class="close-button" (click)="closeDialog()">Close</button>
+
+    <div class="totals"><span>Total</span><span>₹ {{ total }}</span></div>
+
+    <div class="alert alert-error" role="alert" *ngIf="error">{{ error }}</div>
+
+    <div class="panel-actions">
+      <button class="btn btn-primary btn-lg" type="button" (click)="saveOrder()" [disabled]="placing">
+        {{ placing ? 'Placing order…' : 'Place order' }}
+      </button>
+      <a class="btn btn-ghost btn-lg" routerLink="/cart">Back to cart</a>
     </div>
   </div>
-  
+</div>
+
+<div class="dialog-container" *ngIf="showDialog" role="dialog" aria-modal="true" aria-labelledby="done-title">
+  <div class="dialog-box">
+    <h2 id="done-title">Order placed</h2>
+    <p class="muted">Your order has been placed successfully.</p>
+    <button class="btn btn-primary" type="button" (click)="closeDialog()">Done</button>
+  </div>
+</div>

@@ -1,29 +1,29 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { HeaderComponent } from './header/components/header.component';
 import { HeaderModule } from './header/header.module';
 import { RestaurantListingModule } from './restaurant-listing/restaurant-listing.module';
-import { HttpClientModule } from '@angular/common/http';
 import { FoodCatalogueModule } from './food-catalogue/food-catalogue.module';
 import { OrderSummaryModule } from './order-summary/order-summary.module';
+import { AuthModule } from './auth/auth.module';
+import { CartModule } from './cart/cart.module';
 
 @NgModule({
-  declarations: [
-    AppComponent
-  ],
+  declarations: [AppComponent],
   imports: [
     BrowserModule,
-    AppRoutingModule,
-    HeaderModule,
-    RestaurantListingModule,
     HttpClientModule,
+    HeaderModule,
+    AuthModule,
+    CartModule,
+    RestaurantListingModule,
     FoodCatalogueModule,
-    OrderSummaryModule
+    OrderSummaryModule,
+    AppRoutingModule          // keep last so '**' doesn't shadow feature routes
   ],
-  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

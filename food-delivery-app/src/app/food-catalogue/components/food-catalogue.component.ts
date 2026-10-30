@@ -1,82 +1,68 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FoodItemService } from '../service/fooditem.service';
 import { FoodCataloguePage } from 'src/app/Shared/models/FoodCataloguePage';
 import { FoodItem } from 'src/app/Shared/models/FoodItem';
+import { CartService } from 'src/app/cart/services/cart.service';
 
 @Component({
   selector: 'app-food-catalogue',
   templateUrl: './food-catalogue.component.html',
   styleUrls: ['./food-catalogue.component.css']
 })
-export class FoodCatalogueComponent {
+export class FoodCatalogueComponent implements OnInit {
 
   restaurantId: number;
   foodItemResponse: FoodCataloguePage;
-  foodItemCart: FoodItem[] = [];
-  orderSummary: FoodCataloguePage;
+  loading = true;
+  error = '';
 
+  search = '';
+  vegOnly = false;
 
-  constructor(private route: ActivatedRoute, private foodItemService: FoodItemService, private router: Router) {
-  }
+  cart$ = this.cart.cart$;
+  count$ = this.cart.count$;
+  total$ = this.cart.total$;
 
-  ngOnInit() {
+  constructor(private route: ActivatedRoute, private foodItemService: FoodItemService,
+              private router: Router, public cart: CartService) { }
 
+  ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
       this.restaurantId = +params.get('id');
+      this.loading = true;
+      this.foodItemService.getFoodItemsByRestaurant(this.restaurantId).subscribe({
+        next: data => { this.foodItemResponse = data; this.loading = false; },
+        error: () => { this.loading = false; this.error = 'Could not load this menu. Please try again.'; }
+      });
     });
-
-    this.getFoodItemsByRestaurant(this.restaurantId);
-    
   }
 
-  getFoodItemsByRestaurant(restaurant: number) {
-    this.foodItemService.getFoodItemsByRestaurant(restaurant).subscribe(
-      data => {
-        this.foodItemResponse = data;
-      }
-    )
+  isVeg(f: FoodItem): boolean { return !!(f.veg ?? f.isVeg); }
+
+  /** Menu after search + veg filter. */
+  get visibleItems(): FoodItem[] {
+    const items = this.foodItemResponse?.foodItemsList || [];
+    const terms = this.search.toLowerCase().split(/\s+/).filter(Boolean);
+    return items.filter(f =>
+      (!this.vegOnly || this.isVeg(f)) &&
+      terms.every(t => `${f.itemName} ${f.itemDescription}`.toLowerCase().includes(t)));
   }
 
-  increment(food: any) {
-    food.quantity++;
-    const index = this.foodItemCart.findIndex(item => item.id === food.id);
-    if (index === -1) {
-      // If record does not exist, add it to the array
-      this.foodItemCart.push(food);
-    } else {
-      // If record exists, update it in the array
-      this.foodItemCart[index] = food;
+  qty(f: FoodItem): number { return this.cart.qty(f.id); }
+
+  increment(food: FoodItem): void {
+    const restaurant = this.foodItemResponse.restaurant;
+    if (!this.cart.add(restaurant, food)) {
+      const ok = window.confirm('Your cart has items from another restaurant. Start a new cart with this item?');
+      if (ok) { this.cart.add(restaurant, food, true); }
     }
   }
 
-  decrement(food: any) {
-    if (food.quantity > 0) {
-      food.quantity--;
+  decrement(food: FoodItem): void { this.cart.decrement(food); }
 
-      const index = this.foodItemCart.findIndex(item => item.id === food.id);
-      if (this.foodItemCart[index].quantity == 0) {
-        this.foodItemCart.splice(index, 1);
-      } else {
-        // If record exists, update it in the array
-        this.foodItemCart[index] = food;
-      }
+  /** Anonymous users are redirected to login/register by AuthGuard on /orderSummary. */
+  onCheckOut(): void { this.router.navigate(['/orderSummary']); }
 
-    }
-  }
-
-  onCheckOut() {
-    this.foodItemCart;
-    this.orderSummary = {
-      foodItemsList: [],
-      restaurant: null
-    }
-    this.orderSummary.foodItemsList = this.foodItemCart;
-    this.orderSummary.restaurant = this.foodItemResponse.restaurant;
-    this.router.navigate(['/orderSummary'], { queryParams: { data: JSON.stringify(this.orderSummary) } });
-  }
-
-
-
-
+  trackById(_: number, f: FoodItem) { return f.id; }
 }

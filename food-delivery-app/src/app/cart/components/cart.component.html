@@ -1,0 +1,41 @@
+<div class="container page">
+  <ng-container *ngIf="cart$ | async as c">
+    <div class="panel" *ngIf="c.items.length; else emptyCart">
+      <h1>Your cart</h1>
+      <p class="muted" *ngIf="c.restaurant">From {{ c.restaurant.name }}</p>
+
+      <div class="cart-line" *ngFor="let item of c.items; trackBy: trackById">
+        <span class="diet" [class.nonveg]="!(item.veg ?? item.isVeg)" aria-hidden="true"></span>
+        <div class="grow">
+          <div class="name">{{ item.itemName }}</div>
+          <div class="muted">₹ {{ item.price }} each</div>
+        </div>
+        <div class="stepper">
+          <button type="button" (click)="dec(item)" [attr.aria-label]="'Remove one ' + item.itemName">−</button>
+          <span class="qty">{{ item.quantity }}</span>
+          <button type="button" (click)="inc(item, c.restaurant)" [attr.aria-label]="'Add one ' + item.itemName">+</button>
+        </div>
+        <div class="line-total">₹ {{ item.quantity * (item.price || 0) }}</div>
+      </div>
+
+      <div class="totals"><span>Total</span><span>₹ {{ total$ | async }}</span></div>
+
+      <p class="alert alert-info" *ngIf="!(auth.user$ | async)">
+        You'll be asked to log in or sign up when you place the order. Your cart stays as it is.
+      </p>
+
+      <div class="panel-actions">
+        <button class="btn btn-primary btn-lg" type="button" (click)="checkout()">Place order</button>
+        <a class="btn btn-ghost btn-lg" [routerLink]="['/food-catalogue', c.restaurant?.id]">Add more items</a>
+      </div>
+    </div>
+
+    <ng-template #emptyCart>
+      <div class="empty">
+        <h3>Your cart is empty</h3>
+        <p class="muted" style="margin-bottom:16px">Pick a restaurant and add something tasty.</p>
+        <a class="btn btn-primary" routerLink="/restaurant-listing">Browse restaurants</a>
+      </div>
+    </ng-template>
+  </ng-container>
+</div>

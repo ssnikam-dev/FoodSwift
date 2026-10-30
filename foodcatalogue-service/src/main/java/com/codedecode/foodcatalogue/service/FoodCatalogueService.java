@@ -36,6 +36,10 @@ public class FoodCatalogueService {
 		return createFoodCatalogue(foodItemList,restaurant);
 	}
 
+	public List<FoodItem> searchFoodItems(Integer restaurantId, String q) {
+		return foodItemRepo.findByRestaurantIdAndItemNameContainingIgnoreCase(restaurantId, q == null ? "" : q.trim());
+	}
+
 	private FoodCataloguePage createFoodCatalogue(List<FoodItem> foodItemList, Restaurant restaurant) {
 		FoodCataloguePage foodCataloguePage=new FoodCataloguePage();
 		foodCataloguePage.setFoodItemsList(foodItemList);

@@ -12,4 +12,6 @@ public interface FoodItemRepo extends JpaRepository<FoodItem,Integer>{
 
 	List<FoodItem> findByRestaurantId(Integer restaurantId);
 
+	List<FoodItem> findByRestaurantIdAndItemNameContainingIgnoreCase(Integer restaurantId, String itemName);
+
 }
