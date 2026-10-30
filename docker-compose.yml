@@ -70,6 +70,7 @@ services:
     ports: ["127.0.0.1:9092:9092"]
     environment:
       JAVA_OPS: "-Xmx256m -XX:+UseSerialGC"
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/foodcataloguedb?sslMode=DISABLED&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: food_user
       SPRING_DATASOURCE_PASSWORD: ${FOOD_DB_PASSWORD:?set in .env}
@@ -85,6 +86,7 @@ services:
     ports: ["127.0.0.1:9093:9093"]
     environment:
       JAVA_OPS: "-Xmx256m -XX:+UseSerialGC"
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/userdb?sslMode=DISABLED&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: user_svc
       SPRING_DATASOURCE_PASSWORD: ${USER_DB_PASSWORD:?set in .env}
@@ -100,6 +102,7 @@ services:
     ports: ["127.0.0.1:9094:9094"]
     environment:
       JAVA_OPS: "-Xmx256m -XX:+UseSerialGC"
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_DATA_MONGODB_URI: "mongodb://order_user:${ORDER_DB_PASSWORD:?set in .env}@mongo:27017/orderdb?authSource=orderdb"
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
 
