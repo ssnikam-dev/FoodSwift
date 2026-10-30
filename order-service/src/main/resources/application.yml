@@ -1,11 +1,8 @@
-eureka:
-  instance:
-    preferIpAddress: true
-  client:
-    service-url:
-      defaultZone: ${EUREKA_URL:http://eureka:8761/eureka}
+server:
+  port: 9094
 
 spring:
-  data:
-    mongodb:
-      uri: ${ORDER_DB_URL}
+  profiles:
+    active: dev
+  application:
+    name: ORDER-SERVICE
