@@ -14,6 +14,7 @@ import com.codedecode.user.security.JwtService;
 
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final UserRepository users;
