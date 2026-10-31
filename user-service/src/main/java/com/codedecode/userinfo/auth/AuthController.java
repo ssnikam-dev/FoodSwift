@@ -32,7 +32,7 @@ public class AuthController {
         if (users.existsByEmailIgnoreCase(req.getEmail())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");   // -> 409
         }
-        User u = new User();
+        AppUser u = new AppUser();
         u.setName(req.getName().trim());
         u.setEmail(req.getEmail().trim().toLowerCase());
         u.setPasswordHash(encoder.encode(req.getPassword()));
@@ -43,13 +43,13 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest req) {
-        User u = users.findByEmailIgnoreCase(req.getEmail())
+        AppUser u = users.findByEmailIgnoreCase(req.getEmail())
                 .filter(x -> encoder.matches(req.getPassword(), x.getPasswordHash()))
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));          // -> 401
         return toResponse(u);
     }
 
-    private AuthResponse toResponse(User u) {
+    private AuthResponse toResponse(AppUser u) {
         String token = jwt.generate(u.getId(), u.getEmail(), u.getRole());
         return new AuthResponse(token, new UserView(u.getId(), u.getName(), u.getEmail(), u.getRole()));
     }

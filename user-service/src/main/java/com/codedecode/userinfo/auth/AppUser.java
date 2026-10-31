@@ -4,12 +4,12 @@ import javax.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** If your user service already has a User entity, add the `email`, `passwordHash` and `role` fields to it instead. */
+/** If your user service already has a AppUser entity, add the `email`, `passwordHash` and `role` fields to it instead. */
 @Entity
 @Table(name = "app_user", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
 @Data
 @NoArgsConstructor
-public class User {
+public class AppUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

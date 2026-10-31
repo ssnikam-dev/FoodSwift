@@ -22,7 +22,7 @@ public class AuthDtos {
         @NotBlank private String password;
     }
 
-    /** Safe view of a user (no password hash). Matches the Angular `User` interface. */
+    /** Safe view of a user (no password hash). Matches the Angular `AppUser` interface. */
     @Data @AllArgsConstructor
     public static class UserView {
         private Long id;
