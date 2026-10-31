@@ -1,4 +1,4 @@
-package com.codedecode.user.security;
+package com.codedecode.userinfo.security;
 
 import java.util.Arrays;
 import java.util.List;

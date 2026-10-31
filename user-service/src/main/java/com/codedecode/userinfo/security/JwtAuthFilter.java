@@ -1,4 +1,4 @@
-package com.codedecode.user.security;
+package com.codedecode.userinfo.security;
 
 import java.io.IOException;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.codedecode.user.auth;
+package com.codedecode.userinfo.auth;
 
 import javax.persistence.*;
 import lombok.Data;

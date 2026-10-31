@@ -1,4 +1,4 @@
-package com.codedecode.user.auth;
+package com.codedecode.userinfo.auth;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;

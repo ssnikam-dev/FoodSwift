@@ -1,4 +1,4 @@
-package com.codedecode.user.auth;
+package com.codedecode.userinfo.auth;
 
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

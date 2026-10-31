@@ -1,4 +1,4 @@
-package com.codedecode.user.auth;
+package com.codedecode.userinfo.auth;
 
 import javax.validation.Valid;
 
@@ -9,8 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.codedecode.user.auth.AuthDtos.*;
-import com.codedecode.user.security.JwtService;
+import com.codedecode.userinfo.auth.AuthDtos.*;
+import com.codedecode.userinfo.security.JwtService;
 
 @RestController
 @RequestMapping("/auth")
