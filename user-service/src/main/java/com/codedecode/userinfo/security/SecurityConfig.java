@@ -1,5 +1,6 @@
 package com.codedecode.user.security;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -45,9 +46,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origins}") List<String> origins) {
+    public CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origins}") String origins) {
         CorsConfiguration c = new CorsConfiguration();
-        c.setAllowedOrigins(origins);
+        List<String> corsOrigins=Arrays.asList(origins.split(","));
+        c.setAllowedOrigins(corsOrigins);
         c.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         c.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         UrlBasedCorsConfigurationSource s = new UrlBasedCorsConfigurationSource();
