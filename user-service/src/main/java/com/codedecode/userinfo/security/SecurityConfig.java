@@ -34,7 +34,7 @@ public class SecurityConfig {
             .cors().and()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
             .authorizeRequests()
-                .antMatchers("/auth/**").permitAll()
+                .antMatchers("/auth/**", "/user/fetchUserById/**").permitAll()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .antMatchers("/actuator/health").permitAll()
                 .anyRequest().authenticated()                         // /cart etc. need a valid token
